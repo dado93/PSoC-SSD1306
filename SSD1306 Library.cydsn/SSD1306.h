@@ -9,6 +9,10 @@
     
     #include "cytypes.h"
     
+    #define SSD1306_BLACK 0   ///< Draw 'off' pixels
+    #define SSD1306_WHITE 1   ///< Draw 'on' pixels
+    #define SSD1306_INVERSE 2 ///< Invert pixels
+    
     void SSD1306_Start(void);
     
     void SSD1306_Display(void);
@@ -17,7 +21,11 @@
     
     void SSD1306_InvertDisplay(uint8_t invert);
     
-    void SSD1306_GetDim(uint8_t dim);
+    void SSD1306_Dim(uint8_t dim);
+    
+    uint8_t SSD1306_GetWidth(void);
+    
+    uint8_t SSD1306_GetHeight(void);
     
     void SSD1306_DrawPixel(int16_t x, int16_t y, uint16_t color);
     

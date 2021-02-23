@@ -12,37 +12,108 @@
 #include "i2c_interface.h"
 #include "project.h"
 #include "SSD1306.h"
+#include "SSD1306_GFX.h"
+
+void testdrawline();
 
 int main(void)
 {
-    CyGlobalIntEnable; /* Enable global interrupts. */
-
     /* Place your initialization/startup code here (e.g. MyInst_Start()) */
     I2C_Master_Start();
     
-    if (I2C_Peripheral_IsDeviceConnected(0x3C) == 0x00)
+    CyGlobalIntEnable; /* Enable global interrupts. */
+    
+    /*
+    if (I2C_Peripheral_IsDeviceConnected(0x3C) == I2C_NO_ERROR)
     {
         Led_Write(1);
     }
-    
+    */
     CyDelay(100);
     
     SSD1306_Start();
     SSD1306_Display();
+    CyDelay(1000);
     
-    //SSD1306_DrawPixel(10, 10, 0);
-    for (uint8_t y = 0; y < 32; y++)
-    {
-        SSD1306_DrawPixel(10, y, 1);
-        SSD1306_DrawPixel(30, y, 0);
-        SSD1306_DrawPixel(50, y, 2);
-    }
+    SSD1306_DrawPixel(64, 16, 1);
     SSD1306_Display();
+    CyDelay(1000);
     
+    testdrawline();
     for(;;)
     {
         /* Place your application code here. */
     }
 }
 
+void testdrawline() {
+    int16_t i;
+
+    SSD1306_ClearDisplay(); // Clear display buffer
+
+    for( i=0; i < SSD1306_GetWidth(); i+=4) 
+    {
+        SSD1306_GFX_DrawLine(0, 0, i, SSD1306_GetHeight()-1, SSD1306_WHITE);
+        SSD1306_Display(); // Update screen with each newly-drawn line
+        CyDelay(1);
+    }
+    
+    for(i=0; i < SSD1306_GetHeight(); i+=4) 
+    {
+        SSD1306_GFX_DrawLine(0, 0, SSD1306_GetWidth()-1, i, SSD1306_WHITE);
+        SSD1306_Display(); 
+        CyDelay(1);
+    }
+    CyDelay(250);
+
+    SSD1306_ClearDisplay();
+
+    for(i=0; i < SSD1306_GetWidth(); i+=4) 
+    {
+        SSD1306_GFX_DrawLine(0, SSD1306_GetHeight()-1, i, 0, SSD1306_WHITE);
+        SSD1306_Display(); 
+        CyDelay(1);
+    }
+    for(i=SSD1306_GetHeight()-1; i>=0; i-=4) 
+    {
+        SSD1306_GFX_DrawLine(0, SSD1306_GetHeight()-1, SSD1306_GetWidth()-1, i, SSD1306_WHITE);
+        SSD1306_Display(); 
+        CyDelay(1);
+    }
+    CyDelay(250);
+
+    SSD1306_ClearDisplay();
+
+    for(i=SSD1306_GetWidth()-1; i>=0; i-=4) 
+    {
+        SSD1306_GFX_DrawLine(SSD1306_GetWidth()-1, SSD1306_GetHeight()-1, i, 0, SSD1306_WHITE);
+        SSD1306_Display(); 
+        CyDelay(1);
+    }
+    
+    for(i=SSD1306_GetHeight()-1; i>=0; i-=4) 
+    {
+        SSD1306_GFX_DrawLine(SSD1306_GetWidth()-1, SSD1306_GetHeight()-1, 0, i, SSD1306_WHITE);
+        SSD1306_Display();
+        CyDelay(1);
+    }
+    CyDelay(250);
+
+    SSD1306_ClearDisplay();
+
+    for(i=0; i < SSD1306_GetHeight(); i+=4) 
+    {
+        SSD1306_GFX_DrawLine(SSD1306_GetWidth()-1, 0, 0, i, SSD1306_WHITE);
+        SSD1306_Display();
+        CyDelay(1);
+    }
+    for(i=0; i<SSD1306_GetWidth(); i+=4) 
+    {
+        SSD1306_GFX_DrawLine(SSD1306_GetWidth()-1, 0, i, SSD1306_GetHeight()-1, SSD1306_WHITE);
+        SSD1306_Display();
+        CyDelay(1);
+    }
+
+    CyDelay(2000); // Pause for 2 seconds
+}
 /* [] END OF FILE */

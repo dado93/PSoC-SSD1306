@@ -207,7 +207,7 @@ uint8_t I2C_Peripheral_WriteRegisterMulti(uint8_t device_address,
         if (error == I2C_Master_MSTR_NO_ERROR)
         {
             // Continue writing until we have data to write
-            uint8_t counter = register_count;
+            uint16_t counter = register_count;
             while(counter > 0)
             {
                 error = I2C_Master_MasterWriteByte(data[register_count-counter]);

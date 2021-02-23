@@ -14,7 +14,6 @@
     #define __SSD1306_REG_MAP_H__
     
     #define SSD1306_BLACK 0   ///< Draw 'off' pixels
-    
     #define SSD1306_WHITE 1   ///< Draw 'on' pixels
     #define SSD1306_INVERSE 2 ///< Invert pixels
 
