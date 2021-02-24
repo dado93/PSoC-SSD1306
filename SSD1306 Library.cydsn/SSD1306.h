@@ -1,7 +1,20 @@
 /**
-*   \file SSD1306.h
-*
-*   \brief Header file for SSD1306 library.
+ *   \file SSD1306.h
+ *
+ *   \brief Header file for SSD1306 library.
+ *   \section author Author
+ *
+ *   Arduino Version:
+ *     Written by Limor Fried/Ladyada for Adafruit Industries, with
+ *     contributions from the open source community.
+ *
+ *   PSoC Version:
+ *     Written dy Davide Marzorati.
+ *
+ *  \section license License
+ *
+ *  BSD license, all text above, and the splash screen included below,
+ *  must be included in any redistribution.
 */
 
 #ifndef __SSD1306_H__
@@ -9,11 +22,30 @@
     
     #include "cytypes.h"
     
-    #define SSD1306_BLACK 0   ///< Draw 'off' pixels
-    #define SSD1306_WHITE 1   ///< Draw 'on' pixels
-    #define SSD1306_INVERSE 2 ///< Invert pixels
+    /**
+    *   \brief Pixel is drawn as black (i.e., OFF).
+    */
+    #define SSD1306_BLACK 0  
     
-    void SSD1306_Start(void);
+    /**
+    *   \brief Pixel is drawn as white (i.e., ON).
+    */
+    #define SSD1306_WHITE 1  
+    
+    /**
+    *   \brief Pixel is inverted.
+    */
+    #define SSD1306_INVERSE 2 
+    
+    /**
+    *   \brief Start the display.
+    *
+    *   This function initializes the display with the configured 
+    *   settings and prepares it for later use.
+    *   \retval #SSD1306_OK if device was found and initialized.
+    *   \retval #SSD1306_ERROR if error occurred during I2C communication.
+    */
+    uint8_t SSD1306_Start(void);
     
     void SSD1306_Display(void);
     

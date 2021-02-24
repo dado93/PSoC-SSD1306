@@ -23,12 +23,6 @@ int main(void)
     
     CyGlobalIntEnable; /* Enable global interrupts. */
     
-    /*
-    if (I2C_Peripheral_IsDeviceConnected(0x3C) == I2C_NO_ERROR)
-    {
-        Led_Write(1);
-    }
-    */
     CyDelay(100);
     
     SSD1306_Start();
@@ -40,6 +34,7 @@ int main(void)
     CyDelay(1000);
     
     testdrawline();
+    
     for(;;)
     {
         /* Place your application code here. */

@@ -1,38 +1,72 @@
-/* ========================================
+/**
+ *  \file SSD1306.c
  *
- * Copyright YOUR COMPANY, THE YEAR
- * All Rights Reserved
- * UNPUBLISHED, LICENSED SOFTWARE.
+ *  \brief Main source file for SSD1306 Low Level library.
+ * 
+ *  \section author Author
  *
- * CONFIDENTIAL AND PROPRIETARY INFORMATION
- * WHICH IS THE PROPERTY OF your company.
+ *  Arduino Version:
+ *   Written by Limor Fried/Ladyada for Adafruit Industries, with
+ *   contributions from the open source community.
  *
- * ========================================
-*/
-#include "I2C_Master.h"
+ *  PSoC Version:
+ *      Written dy Davide Marzorati.
+ *
+ *  \section license License
+ *
+ *  BSD license, all text above, and the splash screen included below,
+ *  must be included in any redistribution.
+ *
+ */
+
 #include "I2C_Interface.h"
 #include "SSD1306.h"
 #include "SSD1306_RegMap.h"
 #include "SSD1306_Splash.h"
 #include "string.h"
 
-#define SSD1306_I2C_ADDR 0x3c
-
+//***************************
+//          MACROS
+//***************************
+#define SSD1306_I2C_ADDR 0x3C
 #define SSD1306_WIDTH 128
 #define SSD1306_HEIGHT 32
 
 #define SSD1306_Swap(a, b)                                                     \
   (((a) ^= (b)), ((b) ^= (a)), ((a) ^= (b))) ///< No-temp-var swap operation
 
+/**
+*   \brief Draw fast horizontal line.
+*
+*   \param x start x point.
+*   \param y start y point.
+*   \param w horizontal width of the line.
+*   \param color color of the line.
+*/
 static void SSD1306_DrawFastHLineInternal(int16_t x, int16_t y, int16_t w, uint16_t color);
+
+/**
+*   \brief Draw fast vertical line.
+*
+*   \param x start x point.
+*   \param y start y point.
+*   \param h vertical height of the line.
+*   \param color color of the line.
+*/
 static void SSD1306_DrawFastVLineInternal(int16_t x, int16_t y, int16_t h, uint16_t color);
 
+/**
+*   \brief Struct with display related settings.
+*
+*   This struct is used to save display settings
+*   that are used throughout the module.
+*/
 static struct SSD1306_Settings {
-    uint8_t contrast;
-    uint8_t vcc_state;
-    uint8_t width;
-    uint8_t height;
-    uint8_t rotation;
+    uint8_t contrast;   ///< Contrast of the display
+    uint8_t vcc_state;  ///< VCC selection
+    uint8_t width;      ///< Width of the display
+    uint8_t height;     ///< Height of the display
+    uint8_t rotation;   ///< Rotation of 
 }  settings;
 
 
@@ -48,7 +82,7 @@ void SSD1306_Command(uint8_t c)
     I2C_Peripheral_WriteRegister(SSD1306_I2C_ADDR, 0x00, c);
 }
 
-void SSD1306_Start(void)
+uint8_t SSD1306_Start(void)
 {
     settings.vcc_state = SSD1306_SWITCHCAPVCC;
     settings.width = SSD1306_WIDTH;
@@ -70,43 +104,6 @@ void SSD1306_Start(void)
     */
 
     // Init sequence
-    /*
-    uint8 cmdbuf[] = {
-        //0x00,
-        SSD1306_DISPLAYOFF,
-        SSD1306_SETDISPLAYCLOCKDIV,
-        0x80,
-        SSD1306_SETMULTIPLEX,
-       // 0x3f,
-        0x1F,
-        SSD1306_SETDISPLAYOFFSET,
-        0x00,
-        SSD1306_SETSTARTLINE | 0x0,
-        SSD1306_CHARGEPUMP,
-        0x14,
-        SSD1306_MEMORYMODE,
-        0x00,
-        SSD1306_SEGREMAP | 0x1,
-        SSD1306_COMSCANDEC,
-        SSD1306_SETCOMPINS,
-        //0x12,
-        0x02,
-        SSD1306_SETCONTRAST,
-        //0xcf,
-        0x8f,
-        SSD1306_SETPRECHARGE,
-        0xf1,
-        SSD1306_SETVCOMDETECT,
-        0x40,
-        SSD1306_DISPLAYALLON_RESUME,
-        SSD1306_NORMALDISPLAY,
-        SSD1306_DISPLAYON
-    };
-    
-    I2C_Master_MasterSendStart(SSD1306_I2C_ADDR, I2C_Master_WRITE_XFER_MODE);
-    for (uint16 i
-    I2C_Peripheral_WriteRegisterMulti(SSD1306_I2C_ADDR, 0x00, sizeof(cmdbuf), cmdbuf); 
-    */
     
     static const uint8_t init1[] = {SSD1306_DISPLAYOFF,         // 0xAE
                                         SSD1306_SETDISPLAYCLOCKDIV, // 0xD5

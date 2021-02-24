@@ -13,10 +13,6 @@
 #ifndef __SSD1306_REG_MAP_H__
     #define __SSD1306_REG_MAP_H__
     
-    #define SSD1306_BLACK 0   ///< Draw 'off' pixels
-    #define SSD1306_WHITE 1   ///< Draw 'on' pixels
-    #define SSD1306_INVERSE 2 ///< Invert pixels
-
     #define SSD1306_MEMORYMODE 0x20          ///< See datasheet
     #define SSD1306_COLUMNADDR 0x21          ///< See datasheet
     #define SSD1306_PAGEADDR 0x22            ///< See datasheet
