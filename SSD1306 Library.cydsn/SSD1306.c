@@ -61,7 +61,7 @@ static void SSD1306_DrawFastVLineInternal(int16_t x, int16_t y, int16_t h, uint1
 *   This struct is used to save display settings
 *   that are used throughout the module.
 */
-static struct SSD1306_Settings {
+static struct {
     uint8_t contrast;   ///< Contrast of the display
     uint8_t vcc_state;  ///< VCC selection
     uint8_t width;      ///< Width of the display
@@ -69,21 +69,23 @@ static struct SSD1306_Settings {
     uint8_t rotation;   ///< Rotation of 
 }  settings;
 
-
+// Static variable holding current display buffer
 static uint8_t buffer[SSD1306_WIDTH*((SSD1306_HEIGHT+7) / 8)];
 
-static void SSD1306_SendCommandList(const uint8_t *c, uint8_t n) 
+// 
+static uint8_t SSD1306_SendCommandList(const uint8_t *c, uint8_t n) 
 {
-    I2C_Peripheral_WriteRegisterMulti(SSD1306_I2C_ADDR, 0x00, n, c);
+    return I2C_Peripheral_WriteRegisterMulti(SSD1306_I2C_ADDR, 0x00, n, c);
 }
 
-void SSD1306_Command(uint8_t c) 
+static uint8_t SSD1306_Command(uint8_t c) 
 {
-    I2C_Peripheral_WriteRegister(SSD1306_I2C_ADDR, 0x00, c);
+    return I2C_Peripheral_WriteRegister(SSD1306_I2C_ADDR, 0x00, c);
 }
 
 uint8_t SSD1306_Start(void)
 {
+    uint8_t i2c_err;
     settings.vcc_state = SSD1306_SWITCHCAPVCC;
     settings.width = SSD1306_WIDTH;
     settings.height = SSD1306_HEIGHT;
@@ -108,23 +110,21 @@ uint8_t SSD1306_Start(void)
     static const uint8_t init1[] = {SSD1306_DISPLAYOFF,         // 0xAE
                                         SSD1306_SETDISPLAYCLOCKDIV, // 0xD5
                                         0x80, // the suggested ratio 0x80
-                                        SSD1306_SETMULTIPLEX}; // 0xA8
-    SSD1306_SendCommandList(init1, sizeof(init1));
-    SSD1306_Command(SSD1306_HEIGHT - 1);
-    
-    static const uint8_t init2[] = {SSD1306_SETDISPLAYOFFSET, // 0xD3
+                                        SSD1306_SETMULTIPLEX,
+                                        SSD1306_HEIGHT - 1, // 0xA8
+                                        SSD1306_SETDISPLAYOFFSET, // 0xD3
                                         0x00,                      // no offset
                                         SSD1306_SETSTARTLINE | 0x0, // line #0
                                         SSD1306_CHARGEPUMP};        // 0x8D
-    SSD1306_SendCommandList(init2, sizeof(init2));
+    i2c_err = SSD1306_SendCommandList(init1, sizeof(init1));
 
-    SSD1306_Command((settings.vcc_state == SSD1306_EXTERNALVCC) ? 0x10 : 0x14);
+    i2c_err = SSD1306_Command((settings.vcc_state == SSD1306_EXTERNALVCC) ? 0x10 : 0x14);
 
     static const uint8_t  init3[] = {SSD1306_MEMORYMODE, // 0x20
                                         0x00, // 0x0 act like ks0108
                                         SSD1306_SEGREMAP | 0x1,
                                         SSD1306_COMSCANDEC};
-    SSD1306_SendCommandList(init3, sizeof(init3));
+    i2c_err = SSD1306_SendCommandList(init3, sizeof(init3));
 
     uint8_t comPins = 0x02;
     
@@ -148,22 +148,22 @@ uint8_t SSD1306_Start(void)
         // Other screen varieties -- TBD
     }
 
-    SSD1306_Command(SSD1306_SETCOMPINS);
-    SSD1306_Command(comPins);
-    SSD1306_Command(SSD1306_SETCONTRAST);
-    SSD1306_Command(settings.contrast);
+    i2c_err = SSD1306_Command(SSD1306_SETCOMPINS);
+    i2c_err = SSD1306_Command(comPins);
+    i2c_err = SSD1306_Command(SSD1306_SETCONTRAST);
+    i2c_err = SSD1306_Command(settings.contrast);
 
-    SSD1306_Command(SSD1306_SETPRECHARGE); // 0xd9
-    SSD1306_Command((settings.vcc_state == SSD1306_EXTERNALVCC) ? 0x22 : 0xF1);
+    i2c_err = SSD1306_Command(SSD1306_SETPRECHARGE); // 0xd9
+    i2c_err = SSD1306_Command((settings.vcc_state == SSD1306_EXTERNALVCC) ? 0x22 : 0xF1);
     static const uint8_t init5[] = {SSD1306_SETVCOMDETECT, // 0xDB
                                         0x40,
                                         SSD1306_DISPLAYALLON_RESUME, // 0xA4
                                         SSD1306_NORMALDISPLAY,       // 0xA6
                                         SSD1306_DEACTIVATE_SCROLL,
                                         SSD1306_DISPLAYON}; // Main screen turn on
-    SSD1306_SendCommandList(init5, sizeof(init5));
+    i2c_err = SSD1306_SendCommandList(init5, sizeof(init5));
     
-    
+    return i2c_err;
 }
 
 void SSD1306_ClearDisplay(void)
@@ -171,17 +171,10 @@ void SSD1306_ClearDisplay(void)
     memset(buffer, 0, SSD1306_WIDTH * ((SSD1306_HEIGHT + 7) / 8));
 }
 
-uint8_t SSD1306_GetWidth(void)
-{
-    return settings.width;
-}
 
-uint8_t SSD1306_GetHeight(void)
-{
-    return settings.height;
-}
 
-void SSD1306_Display(void) {
+// Update display content
+uint8_t SSD1306_Display(void) {
     
     static const uint8_t dlist1[] = { SSD1306_PAGEADDR,
                                         0,                      // Page start address
@@ -195,19 +188,31 @@ void SSD1306_Display(void) {
 
     uint16_t count = SSD1306_WIDTH * ((SSD1306_HEIGHT + 7) / 8);
     //uint8_t *ptr = buffer;
-    I2C_Peripheral_WriteRegisterMulti(SSD1306_I2C_ADDR, 0x40, count, buffer);
+    uint8_t i2c_err = I2C_Peripheral_WriteRegisterMulti(SSD1306_I2C_ADDR, 0x40, count, buffer);
+    if (i2c_err == I2C_NO_ERROR)
+    {
+        return SSD1306_NO_ERROR;
+    }
+    else
+    {
+        return SSD1306_COMM_ERROR;
+    }
     
 }
 
-void SSD1306_InvertDisplay(uint8_t invert) {
-  SSD1306_Command(invert ? SSD1306_INVERTDISPLAY : SSD1306_NORMALDISPLAY);
+// Invert display
+uint8_t SSD1306_InvertDisplay(uint8_t invert) {
+    uint8_t i2c_err = SSD1306_Command(invert ? SSD1306_INVERTDISPLAY : SSD1306_NORMALDISPLAY);
+    return i2c_err == I2C_ERROR ? SSD1306_COMM_ERROR : SSD1306_NO_ERROR;
 }
 
-void SSD1306_Dim(uint8_t dim) {
-  // the range of contrast to too small to be really useful
-  // it is useful to dim the display
-  SSD1306_Command(SSD1306_SETCONTRAST);
-  SSD1306_Command(dim ? 0 : settings.contrast);
+// Set display contrast
+uint8_t SSD1306_Dim(uint8_t dim) {
+    // the range of contrast to too small to be really useful
+    // it is useful to dim the display
+    uint8_t i2c_err = SSD1306_Command(SSD1306_SETCONTRAST);
+    i2c_err = SSD1306_Command(dim ? 0 : settings.contrast);
+    return i2c_err > 0 ? SSD1306_COMM_ERROR : SSD1306_NO_ERROR;
 }
 
 void SSD1306_DrawPixel(int16_t x, int16_t y, uint16_t color) {
@@ -468,5 +473,35 @@ void SSD1306_DrawFastVLineInternal(int16_t x, int16_t __y,
         } // endif positive height
     }   // endif x in bounds
 }                                            
+ 
+uint8_t SSD1306_StartScrollRight(uint8_t start, uint8_t stop);
+    
+uint8_t SSD1306_StartScrollLeft(uint8_t start, uint8_t stop)
+{
+    static const uint8_t scrollList2a[] = {SSD1306_LEFT_HORIZONTAL_SCROLL,
+                                                 0X00};
+    SSD1306_SendCommandList(scrollList2a, sizeof(scrollList2a));
+    SSD1306_Command(start);
+    SSD1306_Command(0X00);
+    SSD1306_Command(stop);
+    static const uint8_t scrollList2b[] = {0X00, 0XFF,
+                                                 SSD1306_ACTIVATE_SCROLL};
+    SSD1306_SendCommandList(scrollList2b, sizeof(scrollList2b));
+}
+    
+uint8_t SSD1306_StopScroll(void)
+{
+    SSD1306_Command(SSD1306_DEACTIVATE_SCROLL);
+}
+                                            
+uint8_t SSD1306_GetWidth(void)
+{
+    return settings.width;
+}
+
+uint8_t SSD1306_GetHeight(void)
+{
+    return settings.height;
+}                                          
                                             
 /* [] END OF FILE */

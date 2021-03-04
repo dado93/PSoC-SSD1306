@@ -35,6 +35,8 @@ int main(void)
     
     testdrawline();
     
+    SSD1306_StartScrollLeft(0x00, 0x0F);
+    
     for(;;)
     {
         /* Place your application code here. */
